@@ -27,20 +27,135 @@ const EXAMPLE_PROMPTS = [
 ];
 
 export default function SandboxPage() {
+  const STORAGE_KEY = 'sandbox-persistence-v1';
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'screen' | 'terminal' | 'files'>('screen');
   const [screenLines, setScreenLines] = useState(SCREEN_LINES);
+  const [terminalLines, setTerminalLines] = useState<{ text: string; color: string }[]>([]);
+  const [puterReady, setPuterReady] = useState(false);
+  const [puterError, setPuterError] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const loadSandboxState = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const json = window.localStorage.getItem(STORAGE_KEY);
+      if (!json) return;
+      const data = JSON.parse(json);
+      if (Array.isArray(data?.messages)) {
+        setMessages(data.messages.map((msg: any) => ({
+          ...msg,
+          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+        })));
+      }
+      if (typeof data?.input === 'string') setInput(data.input);
+      if (['screen', 'terminal', 'files'].includes(data?.activeTab)) setActiveTab(data.activeTab);
+      if (Array.isArray(data?.screenLines)) setScreenLines(data.screenLines);
+      if (Array.isArray(data?.terminalLines)) setTerminalLines(data.terminalLines);
+    } catch {
+      // ignore invalid persisted state
+    }
+  };
+
+  const saveSandboxState = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        messages: messages.map(msg => ({ ...msg, timestamp: msg.timestamp.toISOString() })),
+        input,
+        activeTab,
+        screenLines,
+        terminalLines,
+      }));
+    } catch {
+      // ignore storage failures
+    }
+  };
+
+  useEffect(() => {
+    loadSandboxState();
+  }, []);
+
+  useEffect(() => {
+    saveSandboxState();
+  }, [messages, input, activeTab, screenLines, terminalLines]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if ((window as any).puter?.ai?.chat) {
+      setPuterReady(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://js.puter.com/v2/';
+    script.async = true;
+    script.onload = () => {
+      if ((window as any).puter?.ai?.chat) {
+        setPuterReady(true);
+      } else {
+        setPuterError('Loaded Puter script but failed to initialize.');
+      }
+    };
+    script.onerror = () => setPuterError('Failed to load Puter.com AI library.');
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   const addScreenLine = (text: string, color = 'rgba(160,210,160,0.8)') => {
     setScreenLines(prev => [...prev.slice(-20), { color, text }]);
+  };
+
+  const appendTerminalOutput = (command: string, output: string) => {
+    setActiveTab('terminal');
+    setTerminalLines(prev => [
+      ...prev,
+      { text: `$ ${command}`, color: 'rgba(110,170,255,0.95)' },
+      ...String(output || '(no output)').split('\n').map(line => ({ text: line, color: 'rgba(160,220,160,0.9)' })),
+    ]);
+  };
+
+  const extractBashCommands = (text: string) => {
+    const regex = /```(?:bash|sh)\n([\s\S]*?)```/gi;
+    const commands: string[] = [];
+    let match: RegExpExecArray | null = null;
+    while ((match = regex.exec(text))) {
+      if (match[1]?.trim()) {
+        commands.push(match[1].trim());
+      }
+    }
+    return commands;
+  };
+
+  const executeCommand = async (command: string) => {
+    const response = await fetch('/api/agent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.error || 'Execution failed');
+    }
+
+    const result = Array.isArray(data.results) ? data.results[0] : data;
+    if (result?.error) {
+      throw new Error(result.error);
+    }
+
+    return result?.output ?? '';
   };
 
   const sendMessage = async () => {
@@ -51,57 +166,99 @@ export default function SandboxPage() {
 
     const userMsg: Message = { role: 'user', content: text, timestamp: new Date() };
     setMessages(prev => [...prev, userMsg]);
-
     addScreenLine(`$ task: ${text.slice(0, 50)}${text.length > 50 ? '…' : ''}`, 'rgba(200,200,80,0.8)');
 
-    try {
-      const res = await fetch('/api/agent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history: messages }),
-      });
-
-      if (!res.ok) throw new Error('API error');
-      if (!res.body) throw new Error('No stream');
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let agentMsg: Message = { role: 'agent', content: '', steps: [], timestamp: new Date() };
-      setMessages(prev => [...prev, agentMsg]);
-
-      let buffer = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() ?? '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.type === 'step') {
-              agentMsg = { ...agentMsg, steps: [...(agentMsg.steps ?? []), data.step] };
-              addScreenLine(`→ ${data.step.text}`, data.step.type === 'done' ? 'rgba(160,210,160,0.8)' : 'rgba(200,200,80,0.8)');
-            } else if (data.type === 'text') {
-              agentMsg = { ...agentMsg, content: agentMsg.content + data.delta };
-            } else if (data.type === 'done') {
-              agentMsg = { ...agentMsg, content: data.content, steps: data.steps };
-            }
-            setMessages(prev => [...prev.slice(0, -1), agentMsg]);
-          } catch {}
-        }
-      }
-    } catch (e) {
+    if (!puterReady) {
       const errMsg: Message = {
         role: 'agent',
-        content: 'Something went wrong. Make sure ANTHROPIC_API_KEY is set in your .env.local file.',
-        steps: [{ type: 'error', text: 'Request failed' }],
+        content: 'Waiting for Puter.com to initialize. Please try again in a moment.',
+        steps: [{ type: 'error', text: 'Puter unavailable' }],
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errMsg]);
-      addScreenLine('✗ error — check API key', 'rgba(255,100,100,0.8)');
+      setLoading(false);
+      return;
+    }
+
+    const puter = (window as any).puter;
+    if (!puter?.ai?.chat) {
+      const errMsg: Message = {
+        role: 'agent',
+        content: 'Puter is loaded but the AI interface is unavailable.',
+        steps: [{ type: 'error', text: 'Puter AI not ready' }],
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errMsg]);
+      setLoading(false);
+      return;
+    }
+
+    const systemPrompt = `You are a sandbox assistant with access to a Linux terminal. Only execute shell commands when needed. When you do, output them inside a fenced bash code block exactly like:\n\n\`\`\`bash\n<command>\n\`\`\`\n\nDo not include extra backticks around the command. Keep the rest of your response in natural language, and do not invent commands that are not required.`;
+    let agentMsg: Message = { role: 'agent', content: '', steps: [{ type: 'running', text: 'Thinking…' }], timestamp: new Date() };
+    setMessages(prev => [...prev, agentMsg]);
+
+    const updateAgentMessage = (next: Message) => {
+      setMessages(prev => [...prev.slice(0, -1), next]);
+    };
+
+    try {
+      const response = await puter.ai.chat(`${systemPrompt}\n\n${text}`, {
+        model: 'gpt-5.4-nano',
+        stream: true,
+      });
+
+      if (response[Symbol.asyncIterator]) {
+        for await (const part of response) {
+          const delta = typeof part === 'string'
+            ? part
+            : typeof part?.text === 'string'
+              ? part.text
+              : typeof part?.message?.content === 'string'
+                ? part.message.content
+                : '';
+
+          if (!delta) continue;
+          agentMsg = { ...agentMsg, content: agentMsg.content + delta };
+          updateAgentMessage(agentMsg);
+        }
+      } else if (typeof response?.text === 'string') {
+        agentMsg = { ...agentMsg, content: response.text };
+        updateAgentMessage(agentMsg);
+      } else if (typeof response === 'string') {
+        agentMsg = { ...agentMsg, content: response };
+        updateAgentMessage(agentMsg);
+      }
+
+      agentMsg = { ...agentMsg, steps: [{ type: 'done', text: 'Response complete' }] };
+      updateAgentMessage(agentMsg);
+
+      const commands = extractBashCommands(agentMsg.content);
+      if (commands.length > 0) {
+        addScreenLine(`Detected ${commands.length} shell command(s), executing…`, 'rgba(140,210,255,0.8)');
+        for (const command of commands) {
+          try {
+            const output = await executeCommand(command);
+            appendTerminalOutput(command, output);
+            addScreenLine(`Command completed: ${command}`, 'rgba(140,255,160,0.85)');
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            appendTerminalOutput(command, `ERROR: ${message}`);
+            addScreenLine(`Command failed: ${message}`, 'rgba(255,140,140,0.9)');
+          }
+        }
+      } else {
+        addScreenLine('No bash command block detected in the AI response.', 'rgba(180,180,220,0.65)');
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      const errMsg: Message = {
+        role: 'agent',
+        content: `Something went wrong while querying Puter: ${message}`,
+        steps: [{ type: 'error', text: 'Puter request failed' }],
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errMsg]);
+      addScreenLine(`✗ Puter error — ${message}`, 'rgba(255,100,100,0.8)');
     } finally {
       setLoading(false);
       inputRef.current?.focus();
@@ -120,10 +277,12 @@ export default function SandboxPage() {
           <div className="live-dot" style={{ width: 6, height: 6 }} />
           container running
         </div>
-        <div className="ml-auto text-[11px]" style={{ color: 'rgba(100,140,200,0.45)' }}>
-          2GB / 2GB storage · Ubuntu 24.04
+<div className="ml-auto flex items-center gap-2">
+            <div className="text-[11px]" style={{ color: 'rgba(100,140,200,0.45)' }}>
+              {'Sandbox AI ready'}
+            </div>
+          </div>
         </div>
-      </div>
 
       {/* Main area */}
       <div className="flex flex-1 overflow-hidden">
@@ -194,12 +353,13 @@ export default function SandboxPage() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-              placeholder="Give the agent a task…"
+              disabled={loading}
+              placeholder='Give the agent a task…'
               className="flex-1 text-sm px-4 py-2.5 rounded-xl outline-none"
               style={{
                 background: 'rgba(12,22,55,0.8)',
                 border: '1px solid rgba(70,120,220,0.2)',
-                color: 'rgba(180,210,255,0.9)',
+                color: '#e2e8f0',
                 caretColor: '#93c5fd',
               }}
             />
@@ -271,8 +431,16 @@ export default function SandboxPage() {
           {activeTab === 'terminal' && (
             <div className="flex-1 overflow-y-auto p-3 font-mono text-[11px] leading-relaxed"
               style={{ color: 'rgba(160,220,160,0.85)' }}>
-              <div style={{ color: 'rgba(80,160,255,0.7)' }}>agent@sandbox:~$ </div>
-              <div style={{ color: 'rgba(100,140,200,0.5)' }}>Terminal output will appear here during tasks</div>
+              {terminalLines.length === 0 ? (
+                <>
+                  <div style={{ color: 'rgba(80,160,255,0.7)' }}>agent@sandbox:~$ </div>
+                  <div style={{ color: 'rgba(100,140,200,0.5)' }}>Terminal output will appear here during tasks</div>
+                </>
+              ) : (
+                terminalLines.map((line, index) => (
+                  <div key={index} style={{ color: line.color, whiteSpace: 'pre-wrap' }}>{line.text}</div>
+                ))
+              )}
             </div>
           )}
 

@@ -14,7 +14,7 @@ npm install
 
 # 2. Set up environment
 cp .env.example .env.local
-# Edit .env.local and add your ANTHROPIC_API_KEY
+# Edit .env.local if needed and ensure Ollama is installed locally or available to the app
 
 # 3. Run
 npm run dev
@@ -40,7 +40,7 @@ The live screen view currently shows simulated terminal output. To enable real D
 - Next.js 14 (App Router)
 - TypeScript
 - Tailwind CSS
-- Anthropic Claude API (claude-sonnet-4)
+- Ollama (local or cloud models)
 - Lucide React icons
 
 ## Roadmap
