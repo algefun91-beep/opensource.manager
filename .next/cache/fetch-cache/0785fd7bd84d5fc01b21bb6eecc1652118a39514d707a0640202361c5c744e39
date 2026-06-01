@@ -1,1 +1,1 @@
-{"kind":"FETCH","data":{"headers":{"content-length":"20","content-type":"application/json; charset=utf-8","date":"Sun, 31 May 2026 15:13:46 GMT"},"body":"eyJ2ZXJzaW9uIjoiMC4yNC4wIn0=","status":200,"url":"http://127.0.0.1:11434/api/version"},"revalidate":31536000,"tags":[]}
+{"kind":"FETCH","data":{"headers":{"content-length":"20","content-type":"application/json; charset=utf-8","date":"Mon, 01 Jun 2026 14:07:03 GMT"},"body":"eyJ2ZXJzaW9uIjoiMC4yNC4wIn0=","status":200,"url":"http://127.0.0.1:11434/api/version"},"revalidate":31536000,"tags":[]}

@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bot, Send, Monitor, Terminal, FolderOpen, CheckCircle, Loader, AlertCircle, ArrowUp } from 'lucide-react';
 import clsx from 'clsx';
+import { renderMessageWithCodeBlocks } from '../../components/ui/MessageRenderer';
 
 type Step = { type: 'done' | 'running' | 'error'; text: string };
 type Message = {
@@ -145,17 +146,64 @@ export default function SandboxPage() {
       body: JSON.stringify({ command }),
     });
 
-    const data = await response.json();
-    if (!response.ok || !data?.success) {
-      throw new Error(data?.error || 'Execution failed');
+    if (!response.ok) {
+      const txt = await response.text();
+      throw new Error(txt || 'Execution failed');
     }
 
-    const result = Array.isArray(data.results) ? data.results[0] : data;
-    if (result?.error) {
-      throw new Error(result.error);
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('text/event-stream')) {
+      const data = await response.json();
+      if (!data?.success) throw new Error(data?.error || 'Execution failed');
+      const result = Array.isArray(data.results) ? data.results[0] : data;
+      if (result?.error) throw new Error(result.error);
+      return result?.output ?? '';
     }
 
-    return result?.output ?? '';
+    const reader = response.body?.getReader();
+    if (!reader) return '';
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let accumulatedOutput = '';
+
+    const flushEvent = (raw: string) => {
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const dataLines = lines.filter(l => l.startsWith('data:')).map(l => l.slice(5).trim());
+      if (dataLines.length === 0) return;
+      const payload = dataLines.join('\n');
+      try {
+        const parsed = JSON.parse(payload);
+        if (parsed.type === 'terminal') {
+          const cmd = parsed.command || command;
+          const out = parsed.output || '';
+          appendTerminalOutput(cmd, out);
+          accumulatedOutput += out + '\n';
+        } else if (parsed.type === 'step') {
+          const stepText = parsed.step?.text || JSON.stringify(parsed.step || parsed);
+          addScreenLine(stepText, 'rgba(150,190,255,0.7)');
+        } else if (parsed.type === 'error') {
+          appendTerminalOutput(command, `ERROR: ${parsed.error}`);
+        } else if (parsed.type === 'done') {
+          if (parsed.content) addScreenLine(parsed.content, 'rgba(160,220,160,0.9)');
+        }
+      } catch (err) {
+        // ignore parse errors
+      }
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split(/\n\n/);
+      buffer = parts.pop() ?? '';
+      for (const part of parts) {
+        flushEvent(part);
+      }
+    }
+
+    if (buffer.trim()) flushEvent(buffer);
+    return accumulatedOutput.trim();
   };
 
   const sendMessage = async () => {
@@ -237,8 +285,7 @@ export default function SandboxPage() {
         addScreenLine(`Detected ${commands.length} shell command(s), executing…`, 'rgba(140,210,255,0.8)');
         for (const command of commands) {
           try {
-            const output = await executeCommand(command);
-            appendTerminalOutput(command, output);
+            await executeCommand(command);
             addScreenLine(`Command completed: ${command}`, 'rgba(140,255,160,0.85)');
           } catch (err) {
             const message = err instanceof Error ? err.message : String(err);
@@ -312,7 +359,7 @@ export default function SandboxPage() {
             )}
 
             {messages.map((msg, i) => (
-              <div key={i} className={clsx('flex flex-col gap-1.5', msg.role === 'user' ? 'items-end' : 'items-start')}>
+              <div key={i} className={clsx('flex flex-col gap-1.5 w-full', msg.role === 'user' ? 'items-end' : 'items-start')}>
                 {msg.steps && msg.steps.length > 0 && (
                   <div className="flex flex-col gap-1 w-full max-w-md">
                     {msg.steps.map((s, si) => (
@@ -326,12 +373,12 @@ export default function SandboxPage() {
                     ))}
                   </div>
                 )}
-                <div className={clsx('text-[13px] leading-relaxed px-3 py-2 rounded-xl max-w-lg',
+                <div className={clsx('text-[13px] leading-relaxed px-3 py-2 rounded-xl max-w-2xl overflow-hidden',
                   msg.role === 'user' ? 'rounded-br-sm' : 'rounded-bl-sm')}
                   style={msg.role === 'user'
                     ? { background: 'rgba(37,99,235,0.25)', border: '1px solid rgba(96,165,250,0.2)', color: 'rgba(180,210,255,0.9)' }
                     : { background: 'rgba(15,30,65,0.7)', border: '1px solid rgba(60,100,200,0.15)', color: 'rgba(160,200,255,0.85)' }}>
-                  {msg.content || (loading && i === messages.length - 1 && (
+                  {msg.content ? renderMessageWithCodeBlocks(msg.content) : (loading && i === messages.length - 1 && (
                     <div className="flex gap-1 items-center py-0.5">
                       {[0,1,2].map(j => (
                         <div key={j} className="w-1.5 h-1.5 rounded-full typing-dot"

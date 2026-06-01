@@ -223,15 +223,12 @@ function parseToolCall(text: string): { name: string; input: Record<string, stri
 type HistoryMessage = { role: 'user' | 'assistant'; content: string };
 
 export async function POST(req: NextRequest) {
-  const { message, history = [], apiKey } = await req.json();
+  const reqBody: any = await req.json();
+  const message = typeof reqBody.message === 'string' ? reqBody.message : typeof reqBody.command === 'string' ? reqBody.command : '';
+  const history = Array.isArray(reqBody.history) ? reqBody.history : [];
+  const apiKey = typeof reqBody.apiKey === 'string' ? reqBody.apiKey : undefined;
   const openAiKey = (typeof apiKey === 'string' && apiKey.trim()) ? apiKey.trim() : OPENAI_API_KEY.trim();
-
-  if (!openAiKey) {
-    return new Response(JSON.stringify({ error: 'Missing OpenAI API key.' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  const hasOpenAI = Boolean(openAiKey && openAiKey.length > 0);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -240,6 +237,7 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
       };
 
+        try {
       const steps: Array<{ type: string; text: string }> = [];
 
       const messages: HistoryMessage[] = [
@@ -259,6 +257,49 @@ export async function POST(req: NextRequest) {
 
       let continueLoop = true;
       let finalText = '';
+
+      // If there's no OpenAI key configured, or the request explicitly provided a `command`,
+      // allow direct execution of explicit shell commands provided by the user in fenced
+      // bash blocks or a `run: <cmd>` prefix. This lets the frontend drive the sandbox
+      // without requiring an OpenAI key.
+      if (!hasOpenAI || (typeof (reqBody?.command) === 'string' && reqBody.command.trim())) {
+        const codeRegex = /```(?:bash|sh)?\n([\s\S]*?)```/gi;
+        const commands: string[] = [];
+        let m: RegExpExecArray | null = null;
+        while ((m = codeRegex.exec(message))) {
+          if (m[1] && m[1].trim()) commands.push(m[1].trim());
+        }
+
+        // support a simple "run: <command>" single-line shorthand
+        const runMatch = message.match(/^run:\s*(.+)$/im);
+        if (runMatch && runMatch[1]) commands.push(runMatch[1].trim());
+
+        // If the request explicitly provided a `command` and we didn't find fenced blocks
+        // or a run: shorthand, treat the entire message as the command to run.
+        if (commands.length === 0 && typeof reqBody.command === 'string' && reqBody.command.trim()) {
+          commands.push(message.trim());
+        }
+
+        if (commands.length > 0) {
+          const steps: Array<{ type: string; text: string }> = [];
+          for (const cmd of commands) {
+            const stepText = `shell: ${cmd.slice(0, 120)}`;
+            steps.push({ type: 'running', text: stepText });
+            send({ type: 'step', step: steps[steps.length - 1] });
+
+            const result = await runTool('shell', { command: cmd });
+
+            steps[steps.length - 1] = { type: 'done', text: stepText };
+            send({ type: 'step', step: steps[steps.length - 1] });
+            send({ type: 'terminal', command: cmd, output: result });
+          }
+
+          finalText = `Executed ${commands.length} command(s).`;
+          send({ type: 'done', content: finalText, steps });
+          controller.close();
+          return;
+        }
+      }
 
       while (continueLoop) {
         let toolCallPayload: any = null;
@@ -299,6 +340,15 @@ export async function POST(req: NextRequest) {
 
       send({ type: 'done', content: finalText, steps });
       controller.close();
+        } catch (err: unknown) {
+          try {
+            send({ type: 'error', error: String(err instanceof Error ? err.message : err) });
+          } catch (_) {
+            // ignore send failures
+          }
+          controller.close();
+          throw err;
+        }
     },
   });
 
