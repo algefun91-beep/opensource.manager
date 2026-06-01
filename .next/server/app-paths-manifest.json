@@ -1,5 +1,5 @@
 {
-  "/api/agent/route": "app/api/agent/route.js",
+  "/dashboard/page": "app/dashboard/page.js",
   "/sandbox/page": "app/sandbox/page.js",
   "/releasify/page": "app/releasify/page.js"
 }
