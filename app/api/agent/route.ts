@@ -9,9 +9,51 @@ const STORAGE_DIR = process.env.AGENT_STORAGE_DIR ?? '/tmp/agent-storage';
 const MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o-mini';
 const OPENAI_API_URL = process.env.OPENAI_API_URL ?? 'https://api.openai.com/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY ?? '';
+// Optional agent API key: when set, the server requires the 'x-agent-api-key'
+// header to match for requests that will execute shell commands.
+const AGENT_API_KEY = process.env.AGENT_API_KEY ?? '';
+const USE_DOCKER = process.env.USE_DOCKER === 'true';
+const DOCKER_IMAGE = process.env.DOCKER_IMAGE ?? 'ubuntu:22.04';
 
 // Ensure storage dir exists
 fs.mkdir(STORAGE_DIR, { recursive: true }).catch(() => {});
+
+let dockerContainerId: string | null = null;
+let dockerContainerName: string | null = null;
+
+// Initialize Docker container on startup
+async function initializeDockerContainer() {
+  if (!USE_DOCKER) return;
+  try {
+    dockerContainerName = `agent_sandbox_${Date.now()}`;
+    const { stdout } = await execAsync(
+      `docker run -d --name ${dockerContainerName} --rm -v "${STORAGE_DIR}:/storage" ${DOCKER_IMAGE} sleep infinity`
+    );
+    // docker prints the container id; store the name for easier control
+    dockerContainerId = (stdout || '').trim().split(/\s+/)[0] || dockerContainerName;
+    console.log(`[Docker] Container started: name=${dockerContainerName} id=${dockerContainerId}`);
+  } catch (err) {
+    console.error('[Docker] Failed to start container:', err);
+    dockerContainerId = null;
+    dockerContainerName = null;
+  }
+}
+
+async function cleanupDockerContainer() {
+  if (!USE_DOCKER || !dockerContainerName) return;
+  try {
+    await execAsync(`docker kill ${dockerContainerName}`);
+    console.log(`[Docker] Container stopped: ${dockerContainerName}`);
+  } catch (err) {
+    console.error('[Docker] Failed to stop container:', err);
+  }
+}
+
+initializeDockerContainer();
+
+process.on('exit', () => { cleanupDockerContainer().catch(() => {}); });
+process.on('SIGINT', () => { cleanupDockerContainer().then(() => process.exit(0)).catch(() => process.exit(1)); });
+process.on('SIGTERM', () => { cleanupDockerContainer().then(() => process.exit(0)).catch(() => process.exit(1)); });
 
 type ToolDef = {
   name: string;
@@ -86,20 +128,45 @@ async function runTool(name: string, input: Record<string, string>): Promise<str
   try {
     switch (name) {
       case 'shell': {
-        const { stdout, stderr } = await execAsync(input.command, {
-          cwd: STORAGE_DIR,
+        const cmdRaw = String(input.command || '');
+
+        // Basic server-side sanitization to reduce obvious dangerous operations.
+        // If you need broader capabilities, set AGENT_API_KEY and run in Docker in a trusted environment.
+        const unsafePatterns: Array<{ re: RegExp; reason: string }> = [
+          { re: /\brm\s+-rf\b/i, reason: 'recursive remove' },
+          { re: /\bshutdown\b|\breboot\b|\bhalt\b/i, reason: 'system control' },
+          { re: /\bmkfs\b|\bdd\b/i, reason: 'disk operations' },
+          { re: /[`$()]|\|\||&&|;|\|/i, reason: 'command chaining or substitution' },
+          { re: /\/dev\//i, reason: 'device access' },
+        ];
+        for (const p of unsafePatterns) {
+          if (p.re.test(cmdRaw)) {
+            return `Error: command blocked by server policy (${p.reason})`;
+          }
+        }
+
+        let cmd = cmdRaw;
+        if (USE_DOCKER && dockerContainerName) {
+          // run inside container with working dir /storage
+          cmd = `docker exec -w /storage ${dockerContainerName} bash -lc ${JSON.stringify(cmdRaw)}`;
+        }
+        const { stdout, stderr } = await execAsync(cmd, {
+          cwd: USE_DOCKER ? undefined : STORAGE_DIR,
           timeout: 15000,
-          env: { ...process.env, HOME: STORAGE_DIR },
+          env: USE_DOCKER ? process.env : { ...process.env, HOME: STORAGE_DIR },
+          maxBuffer: 10 * 1024 * 1024,
         });
         return (stdout + stderr).slice(0, 3000) || '(no output)';
       }
       case 'write_file': {
-        const fp = path.join(STORAGE_DIR, path.basename(input.filename));
+        const filename = path.basename(input.filename);
+        const fp = path.join(STORAGE_DIR, filename);
         await fs.writeFile(fp, input.content, 'utf8');
-        return `Written ${input.filename} (${input.content.length} chars)`;
+        return `Written ${filename} (${input.content.length} chars)`;
       }
       case 'read_file': {
-        const fp = path.join(STORAGE_DIR, path.basename(input.filename));
+        const filename = path.basename(input.filename);
+        const fp = path.join(STORAGE_DIR, filename);
         const content = await fs.readFile(fp, 'utf8');
         return content.slice(0, 4000);
       }
@@ -229,6 +296,10 @@ export async function POST(req: NextRequest) {
   const apiKey = typeof reqBody.apiKey === 'string' ? reqBody.apiKey : undefined;
   const openAiKey = (typeof apiKey === 'string' && apiKey.trim()) ? apiKey.trim() : OPENAI_API_KEY.trim();
   const hasOpenAI = Boolean(openAiKey && openAiKey.length > 0);
+  // Agent API key check: if AGENT_API_KEY is set on the server, require the client
+  // to provide a matching 'x-agent-api-key' header to allow shell execution.
+  const providedAgentKey = req.headers.get('x-agent-api-key') || '';
+  const isAgentAuthenticated = AGENT_API_KEY ? providedAgentKey === AGENT_API_KEY : true;
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -281,6 +352,11 @@ export async function POST(req: NextRequest) {
         }
 
         if (commands.length > 0) {
+          if (!isAgentAuthenticated) {
+            send({ type: 'error', error: 'Unauthorized: server requires x-agent-api-key to execute commands' });
+            controller.close();
+            return;
+          }
           const steps: Array<{ type: string; text: string }> = [];
           for (const cmd of commands) {
             const stepText = `shell: ${cmd.slice(0, 120)}`;
@@ -319,6 +395,13 @@ export async function POST(req: NextRequest) {
           const stepText = `${tool.name}: ${JSON.stringify(tool.input).slice(0, 80)}`;
           steps.push({ type: 'running', text: stepText });
           send({ type: 'step', step: steps[steps.length - 1] });
+
+          // Enforce agent auth for executing shell tools when server requires it
+          if (tool.name === 'shell' && !isAgentAuthenticated) {
+            send({ type: 'error', error: 'Unauthorized: server requires x-agent-api-key to execute shell commands' });
+            controller.close();
+            return;
+          }
 
           const result = await runTool(tool.name, tool.input);
 

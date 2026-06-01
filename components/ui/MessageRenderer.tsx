@@ -5,7 +5,7 @@ export function renderMessageWithCodeBlocks(content: string) {
   if (!content) return content;
 
   const parts: React.ReactNode[] = [];
-  const regex = /```(bash|sh|python|js|javascript|ts|typescript|java|cpp|c|go|rust|ruby|php|yaml|json|html|css|sql)?\n([\s\S]*?)```/gi;
+  const regex = /```(bash|sh|python|js|javascript|ts|typescript|java|cpp|c|go|rust|ruby|php|yaml|json|html|css|sql)?\s*\n([\s\S]*?)```/gi;
   let lastIndex = 0;
   let match: RegExpExecArray | null = null;
   let key = 0;
@@ -16,7 +16,7 @@ export function renderMessageWithCodeBlocks(content: string) {
     const textBefore = content.slice(lastIndex, match.index);
     if (textBefore.trim()) {
       parts.push(
-        <div key={`text-${key++}`} style={{ marginBottom: 12 }}>{textBefore}</div>
+        <span key={`text-${key++}`}>{textBefore}</span>
       );
     }
     const language = match[1] || 'bash';
@@ -30,7 +30,7 @@ export function renderMessageWithCodeBlocks(content: string) {
   const textAfter = content.slice(lastIndex);
   if (textAfter.trim()) {
     parts.push(
-      <div key={`text-${key++}`} style={{ marginTop: 12 }}>{textAfter}</div>
+      <span key={`text-${key++}`}>{textAfter}</span>
     );
   }
 
