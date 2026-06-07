@@ -41,6 +41,7 @@ export default function SandboxPage() {
   const [terminalLines, setTerminalLines] = useState<{ text: string; color: string }[]>([]);
   const [puterReady, setPuterReady] = useState(false);
   const [puterError, setPuterError] = useState<string | null>(null);
+  const [agentKey, setAgentKey] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -49,6 +50,18 @@ export default function SandboxPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem('agent_key') || '';
+    if (saved) setAgentKey(saved);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (agentKey) localStorage.setItem('agent_key', agentKey);
+    else localStorage.removeItem('agent_key');
+  }, [agentKey]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -119,7 +132,7 @@ export default function SandboxPage() {
   const executeCommand = async (command: string) => {
     const response = await fetch('/api/agent', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-agent-api-key': agentKey || '' },
       body: JSON.stringify({ command }),
     });
 
@@ -306,7 +319,7 @@ export default function SandboxPage() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Topbar */}
       <div className="flex items-center px-5 gap-3 flex-shrink-0"
         style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'rgba(8,16,38,0.7)', backdropFilter: 'blur(8px)' }}>
@@ -317,19 +330,33 @@ export default function SandboxPage() {
           <div className="live-dot" style={{ width: 6, height: 6 }} />
           container running
         </div>
-<div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
             <div className="text-[11px]" style={{ color: 'rgba(100,140,200,0.45)' }}>
               {'Sandbox AI ready'}
+            </div>
+            <div className="flex items-center gap-2 ml-3">
+              <input
+                value={agentKey}
+                onChange={e => setAgentKey(e.target.value)}
+                placeholder="Agent key (dev)"
+                className="text-[12px] px-2 py-1 rounded"
+                style={{ background: 'rgba(8,12,28,0.6)', border: '1px solid rgba(60,90,160,0.12)', color: '#e2e8f0', width: 160 }}
+              />
+              <button onClick={() => { setAgentKey(''); localStorage.removeItem('agent_key'); }}
+                className="text-[12px] px-2 py-1 rounded"
+                style={{ background: 'rgba(40,40,60,0.2)', border: '1px solid rgba(60,90,160,0.12)', color: 'rgba(180,200,255,0.85)' }}>
+                Clear
+              </button>
             </div>
           </div>
         </div>
 
       {/* Main area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
 
         {/* Chat */}
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3">
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 flex flex-col gap-3">
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full gap-6">
                 <div className="text-center">
@@ -417,7 +444,7 @@ export default function SandboxPage() {
         </div>
 
         {/* Right: screen + tabs */}
-        <div className="w-80 flex-shrink-0 flex flex-col overflow-hidden"
+        <div className="w-80 flex-shrink-0 flex flex-col min-h-0 overflow-hidden"
           style={{ borderLeft: '1px solid rgba(100,160,255,0.1)', background: 'rgba(6,12,32,0.7)' }}>
 
           {/* Tabs */}

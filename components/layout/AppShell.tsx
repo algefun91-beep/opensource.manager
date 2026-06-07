@@ -1,11 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { FormEvent, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard, GitBranch, Bot, Github,
-  Plus, Settings, Cpu
+  Plus, Settings, Cpu, X
 } from 'lucide-react';
 import clsx from 'clsx';
+import { useConnectedRepos } from '@/components/useConnectedRepos';
 
 const NAV = [
   { href: '/dashboard',  label: 'Project Dashboard', icon: LayoutDashboard },
@@ -13,10 +16,51 @@ const NAV = [
   { href: '/sandbox',    label: 'Agent Sandbox',      icon: Bot,        live: true },
 ];
 
-const REPOS = ['my-cli-tool', 'react-hooks-lib'];
-
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+  const router = useRouter();
+  const { repos, addRepo, removeRepo } = useConnectedRepos();
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [repoInput, setRepoInput] = useState('');
+  const [repoError, setRepoError] = useState('');
+  const [showConnect, setShowConnect] = useState(false);
+
+  const handleConnectRepo = async (event: FormEvent) => {
+    event.preventDefault();
+    const result = await addRepo(repoInput);
+    if (!result.ok) {
+      setRepoError(result.error || 'Unable to connect repo.');
+      return;
+    }
+
+    setRepoInput('');
+    setRepoError('');
+    setShowConnect(false);
+  };
+
+  const isPublicPage = path === '/' || path === '/login' || path === '/signup';
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(response => response.json())
+      .then(data => setUser(data.user || null))
+      .catch(() => setUser(null));
+  }, []);
+
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+    router.refresh();
+  };
+
+  if (isPublicPage) {
+    return (
+      <div className="min-h-screen"
+        style={{ background: 'linear-gradient(160deg,#07111f 0%,#0e1f35 52%,#081421 100%)' }}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden"
@@ -84,19 +128,75 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="px-2.5 pt-3 pb-1">
           <div className="text-[10px] px-1.5 mb-1.5 uppercase tracking-widest"
             style={{ color: 'rgba(100,140,200,0.45)' }}>repos</div>
-          {REPOS.map(r => (
-            <div key={r}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg mb-0.5 text-[12px] cursor-pointer transition-all"
+          {repos.map(r => (
+            <div key={r.fullName}
+              className="group flex items-center gap-2 px-2.5 py-1.5 rounded-lg mb-0.5 text-[12px] transition-all"
               style={{ color: 'rgba(140,170,230,0.6)' }}>
               <Github size={13} className="flex-shrink-0" />
-              <span className="truncate">{r}</span>
+              <span className="truncate flex-1">{r.fullName}</span>
+              <button
+                onClick={() => removeRepo(r.fullName)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                title={`Remove ${r.fullName}`}
+                style={{ color: 'rgba(140,170,230,0.55)' }}
+              >
+                <X size={12} />
+              </button>
             </div>
           ))}
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] cursor-pointer"
-            style={{ color: 'rgba(100,140,200,0.45)' }}>
-            <Plus size={13} />
-            <span>Connect repo</span>
-          </div>
+          {showConnect ? (
+            <form onSubmit={handleConnectRepo} className="mt-2 flex flex-col gap-1.5">
+              <input
+                value={repoInput}
+                onChange={event => {
+                  setRepoInput(event.target.value);
+                  setRepoError('');
+                }}
+                placeholder="owner/repo"
+                className="text-[12px] px-2 py-1.5 rounded-md outline-none"
+                style={{
+                  background: 'rgba(6,12,28,0.7)',
+                  border: '1px solid rgba(70,120,220,0.2)',
+                  color: 'rgba(200,220,255,0.9)',
+                }}
+              />
+              {repoError && (
+                <div className="text-[10px] leading-snug" style={{ color: 'rgba(255,140,140,0.85)' }}>
+                  {repoError}
+                </div>
+              )}
+              <div className="flex gap-1.5">
+                <button
+                  type="submit"
+                  className="flex-1 text-[11px] px-2 py-1 rounded-md"
+                  style={{ background: 'rgba(37,99,235,0.35)', border: '1px solid rgba(96,165,250,0.25)', color: '#93c5fd' }}
+                >
+                  Connect
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowConnect(false);
+                    setRepoInput('');
+                    setRepoError('');
+                  }}
+                  className="text-[11px] px-2 py-1 rounded-md"
+                  style={{ background: 'rgba(30,50,100,0.25)', border: '1px solid rgba(100,160,255,0.12)', color: 'rgba(160,190,240,0.65)' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              onClick={() => setShowConnect(true)}
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] cursor-pointer w-full"
+              style={{ color: 'rgba(100,140,200,0.45)' }}
+            >
+              <Plus size={13} />
+              <span>Connect repo</span>
+            </button>
+          )}
         </div>
 
         {/* Bottom */}
@@ -104,13 +204,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer">
             <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium flex-shrink-0"
               style={{ background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', color: '#fff' }}>
-              JD
+              {(user?.name || user?.email || 'U').slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[13px]" style={{ color: 'rgba(180,210,255,0.8)' }}>dev</div>
-              <div className="text-[10px]" style={{ color: 'rgba(100,140,200,0.5)' }}>local instance</div>
+              <div className="text-[13px] truncate" style={{ color: 'rgba(180,210,255,0.8)' }}>{user?.name || 'dev'}</div>
+              <div className="text-[10px] truncate" style={{ color: 'rgba(100,140,200,0.5)' }}>{user?.email || 'local account'}</div>
             </div>
-            <Settings size={13} style={{ color: 'rgba(100,140,200,0.4)' }} />
+            <button onClick={logout} title="Log out" style={{ color: 'rgba(100,140,200,0.4)' }}>
+              <Settings size={13} />
+            </button>
           </div>
         </div>
       </aside>

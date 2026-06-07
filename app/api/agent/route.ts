@@ -20,11 +20,23 @@ fs.mkdir(STORAGE_DIR, { recursive: true }).catch(() => {});
 
 let dockerContainerId: string | null = null;
 let dockerContainerName: string | null = null;
+let dockerAvailable = false;
 
 // Initialize Docker container on startup
 async function initializeDockerContainer() {
   if (!USE_DOCKER) return;
   try {
+    // Ensure the docker CLI is available before attempting to run containers
+    try {
+      await execAsync('command -v docker');
+      dockerAvailable = true;
+    } catch (err) {
+      console.warn('[Docker] docker CLI not found in PATH; skipping Docker initialization.');
+      dockerAvailable = false;
+      dockerContainerId = null;
+      dockerContainerName = null;
+      return;
+    }
     dockerContainerName = `agent_sandbox_${Date.now()}`;
     const { stdout } = await execAsync(
       `docker run -d --name ${dockerContainerName} --rm -v "${STORAGE_DIR}:/storage" ${DOCKER_IMAGE} sleep infinity`
@@ -36,6 +48,7 @@ async function initializeDockerContainer() {
     console.error('[Docker] Failed to start container:', err);
     dockerContainerId = null;
     dockerContainerName = null;
+    dockerAvailable = false;
   }
 }
 
@@ -146,9 +159,16 @@ async function runTool(name: string, input: Record<string, string>): Promise<str
         }
 
         let cmd = cmdRaw;
-        if (USE_DOCKER && dockerContainerName) {
-          // run inside container with working dir /storage
-          cmd = `docker exec -w /storage ${dockerContainerName} bash -lc ${JSON.stringify(cmdRaw)}`;
+        if (USE_DOCKER) {
+          if (!dockerAvailable) {
+            return `Error: Docker requested but docker CLI is not available on the server.`;
+          }
+          if (dockerContainerName) {
+            // run inside container with working dir /storage
+            cmd = `docker exec -w /storage ${dockerContainerName} bash -lc ${JSON.stringify(cmdRaw)}`;
+          } else {
+            return `Error: Docker requested but no sandbox container is available.`;
+          }
         }
         const { stdout, stderr } = await execAsync(cmd, {
           cwd: USE_DOCKER ? undefined : STORAGE_DIR,

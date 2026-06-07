@@ -5,8 +5,6 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 type Step = { type: 'done' | 'running' | 'error'; text: string };
 export type ChatMessage = { role: 'user' | 'agent'; content: string; steps?: Step[]; timestamp: Date };
 
-const STORAGE_KEY = 'sandbox-persistence-v1';
-
 const ChatContext = createContext<null | {
   messages: ChatMessage[];
   setMessages: (m: ChatMessage[]) => void;
@@ -16,56 +14,38 @@ const ChatContext = createContext<null | {
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  // Load messages from storage once
   useEffect(() => {
-    try {
-      if (typeof window === 'undefined') return;
-      const json = window.localStorage.getItem(STORAGE_KEY);
-      if (!json) return;
-      const data = JSON.parse(json);
-      if (Array.isArray(data?.messages)) {
-        const msgs = data.messages.map((m: any) => ({
+    let cancelled = false;
+    fetch('/api/sandbox/messages')
+      .then(response => response.ok ? response.json() : { messages: [] })
+      .then(data => {
+        if (cancelled) return;
+        const msgs = Array.isArray(data?.messages) ? data.messages.map((m: any) => ({
           ...m,
           timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
-        }));
+        })) : [];
         setMessages(msgs);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  // Persist messages only (avoid stomping other state fields)
-  useEffect(() => {
-    try {
-      if (typeof window === 'undefined') return;
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      const base = raw ? JSON.parse(raw) : {};
-      const payload = { ...base, messages: messages.map(m => ({ ...m, timestamp: m.timestamp.toISOString() })) };
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    } catch {
-      // ignore
-    }
-  }, [messages]);
-
-  // Listen for storage events to sync across tabs
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== STORAGE_KEY) return;
-      try {
-        const data = JSON.parse(e.newValue || '{}');
-        if (Array.isArray(data?.messages)) {
-          const msgs = data.messages.map((m: any) => ({ ...m, timestamp: m.timestamp ? new Date(m.timestamp) : new Date() }));
-          setMessages(msgs);
-        }
-      } catch {
-        // ignore
-      }
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+    return () => {
+      cancelled = true;
     };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
   }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    const controller = new AbortController();
+    fetch('/api/sandbox/messages', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: messages.map(m => ({ ...m, timestamp: m.timestamp.toISOString() })) }),
+      signal: controller.signal,
+    }).catch(() => undefined);
+    return () => controller.abort();
+  }, [messages, loaded]);
 
   const addMessage = useCallback((m: ChatMessage) => setMessages(prev => [...prev, m]), []);
 
