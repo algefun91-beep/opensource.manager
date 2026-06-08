@@ -14,6 +14,7 @@ const NAV = [
   { href: '/dashboard',  label: 'Project Dashboard', icon: LayoutDashboard },
   { href: '/releasify',  label: 'Releasify',          icon: GitBranch,  badge: '3 new' },
   { href: '/sandbox',    label: 'Agent Sandbox',      icon: Bot,        live: true },
+  { href: '/settings',   label: 'Settings',           icon: Settings },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -82,7 +83,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               opensource.manager
             </div>
             <div className="text-[10px]" style={{ color: 'rgba(100,140,200,0.5)', letterSpacing: '0.04em' }}>
-              v0.1.0 · local
+              v0.1.0 — built with Next.js, React, and a lot of ❤️
             </div>
           </div>
         </div>
@@ -210,9 +211,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="text-[13px] truncate" style={{ color: 'rgba(180,210,255,0.8)' }}>{user?.name || 'dev'}</div>
               <div className="text-[10px] truncate" style={{ color: 'rgba(100,140,200,0.5)' }}>{user?.email || 'local account'}</div>
             </div>
-            <button onClick={logout} title="Log out" style={{ color: 'rgba(100,140,200,0.4)' }}>
-              <Settings size={13} />
-            </button>
           </div>
         </div>
       </aside>

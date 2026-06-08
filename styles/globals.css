@@ -13,7 +13,20 @@
   --text-secondary: rgba(140, 170, 230, 0.65);
   --text-muted: rgba(90, 120, 180, 0.5);
 }
+[data-theme="light"] {
+  --glass-bg: rgba(230, 238, 255, 0.8);
+  --glass-border: rgba(100, 140, 220, 0.25);
+  --accent-blue: #2563eb;
+  --text-primary: rgba(20, 35, 70, 0.92);
+  --text-secondary: rgba(60, 90, 160, 0.7);
+  --text-muted: rgba(100, 130, 190, 0.6);
+}
 
+[data-theme="light"],
+[data-theme="light"] body {
+  background: #e8f0ff;
+  color: var(--text-primary);
+}
 * { box-sizing: border-box; }
 
 html, body {

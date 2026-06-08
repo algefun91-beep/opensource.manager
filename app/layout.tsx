@@ -11,6 +11,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          const t = localStorage.getItem('theme');
+          if (t) document.documentElement.setAttribute('data-theme', t);
+        `}} />
+      </head>
       <body>
         <AppShell>
           <ChatProvider>{children}</ChatProvider>
