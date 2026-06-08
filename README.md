@@ -31,7 +31,7 @@ The Agent Sandbox lets you give the AI natural language tasks. It can:
 - Search the web
 - Fetch URLs
 - (coming) Send and read email via SMTP/IMAP
-- (coming) Full Docker + Xvfb live screen via noVNC
+- Full Docker + Xvfb live screen via noVNC
 
 The live screen view currently shows simulated terminal output. To enable real Docker + Xvfb screen streaming, see `docs/docker-sandbox.md` (coming soon).
 
@@ -40,16 +40,16 @@ The live screen view currently shows simulated terminal output. To enable real D
 - Next.js 14 (App Router)
 - TypeScript
 - Tailwind CSS
-- Ollama (local or cloud models)
-- Lucide React icons
+- Puter.js for ai
+
 
 ## Roadmap
 
-- [ ] Real GitHub OAuth + live repo data
-- [ ] Docker sandbox with Xvfb + noVNC screen streaming
+- [x] Real GitHub OAuth + live repo data
+- [x] Docker sandbox with Xvfb + noVNC screen streaming
 - [ ] Email tool (SMTP + IMAP)
-- [ ] Releasify: publish changelog to public URL
-- [ ] Releasify: auto-post to Slack / Discord
+- [x] Releasify: publish changelog to public URL
+- [x] Releasify: auto-post to Slack / Discord
 - [ ] Contributor leaderboard
 - [ ] Roadmap board tied to GitHub milestones
 # opensouce-manager
