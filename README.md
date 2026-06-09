@@ -6,7 +6,7 @@ A local-first open source project management suite with three tools:
 - **Releasify** — AI-powered changelog generator from commits
 - **Agent Sandbox** — local AI agent with shell, web, file, and email access
 
-## Setup
+## Local Setup (Depreciated)
 
 ```bash
 # 1. Install dependencies
@@ -21,6 +21,13 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Visit Live website (Powered by Vercel)
+Vist the live website here:
+
+```website
+https://opensource-manager.vercel.app/
+```
 
 ## Agent Sandbox
 
