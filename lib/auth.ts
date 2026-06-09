@@ -97,11 +97,14 @@ export async function getUserFromSessionId(sessionId?: string | null) {
 }
 
 export async function getCurrentUser() {
-  return getUserFromSessionId(cookies().get(SESSION_COOKIE)?.value);
+  const cookieStore = await cookies();
+  return getUserFromSessionId(cookieStore.get(SESSION_COOKIE)?.value);
 }
 
+
 export async function requireUser(req?: NextRequest) {
-  const sessionId = req?.cookies.get(SESSION_COOKIE)?.value || cookies().get(SESSION_COOKIE)?.value;
+  const cookieStore = await cookies();
+  const sessionId = req?.cookies.get(SESSION_COOKIE)?.value || cookieStore.get(SESSION_COOKIE)?.value;
   const user = await getUserFromSessionId(sessionId);
   if (!user) throw new Error('Authentication required.');
   return user;
