@@ -54,7 +54,7 @@ export type AppDatabase = {
 };
 
 function sql() {
-  const url = process.env.STORE_URL;
+  const url = process.env.STORE_DATABASE_URL;
   if (!url) throw new Error('STORE_URL environment variable is not set.');
   return neon(url);
 }
