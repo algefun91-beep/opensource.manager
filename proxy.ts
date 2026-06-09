@@ -4,7 +4,7 @@ const SESSION_COOKIE = 'osm_session';
 const PROTECTED_PREFIXES = ['/dashboard', '/sandbox', '/releasify'];
 const AUTH_PAGES = ['/login', '/signup'];
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const hasSession = Boolean(req.cookies.get(SESSION_COOKIE)?.value);
 
