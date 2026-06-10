@@ -35,18 +35,24 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  useEffect(() => {
-    if (!loaded) return;
-    const controller = new AbortController();
-    fetch('/api/sandbox/messages', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: messages.map(m => ({ ...m, timestamp: m.timestamp.toISOString() })) }),
-      signal: controller.signal,
-    }).catch(() => undefined);
-    return () => controller.abort();
-  }, [messages, loaded]);
+useEffect(() => {
+  if (!loaded) return;
 
+  // Don't save while a message is still streaming
+  const isStreaming = messages.some(m =>
+    m.steps?.some(s => s.type === 'running')
+  );
+  if (isStreaming) return;
+
+  const controller = new AbortController();
+  fetch('/api/sandbox/messages', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: messages.map(m => ({ ...m, timestamp: m.timestamp.toISOString() })) }),
+    signal: controller.signal,
+  }).catch(() => undefined);
+  return () => controller.abort();
+}, [messages, loaded]);
   const addMessage = useCallback((m: ChatMessage) => setMessages(prev => [...prev, m]), []);
 
   const getConversationText = useCallback(() => {
