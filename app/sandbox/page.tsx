@@ -1,9 +1,9 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, createContext } from 'react';
 import { Bot, Send, Monitor, Terminal, FolderOpen, CheckCircle, Loader, AlertCircle, ArrowUp } from 'lucide-react';
 import clsx from 'clsx';
 import { renderMessageWithCodeBlocks } from '../../components/ui/MessageRenderer';
-import { useChat } from '@/components/ChatProvider';
+import { ChatMessage, useChat } from '@/components/ChatProvider';
 
 type Step = { type: 'done' | 'running' | 'error'; text: string };
 type Message = {
@@ -235,9 +235,12 @@ export default function SandboxPage() {
     let agentMsg: Message = { role: 'agent', content: '', steps: [{ type: 'running', text: 'Thinking…' }], timestamp: new Date() };
     addMessage(agentMsg);
 
-    const updateAgentMessage = (next: Message) => {
-      setMessages((prev: Message[]) => [...prev.slice(0, -1), next]);
-    };
+    const ChatContext = createContext<null | {
+      messages: ChatMessage[];
+      setMessages: (m: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void;
+      addMessage: (m: ChatMessage) => void;
+      getConversationText: () => string;
+    }>(null);
 
     try {
       const conversation = getConversationText();
