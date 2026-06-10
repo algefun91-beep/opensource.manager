@@ -236,8 +236,7 @@ export default function SandboxPage() {
     addMessage(agentMsg);
 
     const updateAgentMessage = (next: Message) => {
-      // replace last message with updated one
-      setMessages([...messages.slice(0, -1), next]);
+      setMessages((prev: Message[]) => [...prev.slice(0, -1), next]);
     };
 
     try {
