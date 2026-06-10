@@ -236,8 +236,9 @@ export async function updateDb<T>(updater: (db: AppDatabase) => T | Promise<T>):
   const db = await readDb();
   const result = await updater(db);
 
-  // Sync mutations back to Postgres
   const sql_ = sql();
+
+  // sync users
   for (const user of db.users) {
     await sql_`
       INSERT INTO users (id, email, name, password_hash, salt, created_at)
@@ -245,6 +246,8 @@ export async function updateDb<T>(updater: (db: AppDatabase) => T | Promise<T>):
       ON CONFLICT (id) DO NOTHING
     `;
   }
+
+  // sync sessions
   for (const session of db.sessions) {
     await sql_`
       INSERT INTO sessions (id, user_id, created_at, expires_at)
@@ -252,12 +255,24 @@ export async function updateDb<T>(updater: (db: AppDatabase) => T | Promise<T>):
       ON CONFLICT (id) DO NOTHING
     `;
   }
-  // Delete sessions that were removed
   const sessionIds = db.sessions.map(s => s.id);
   if (sessionIds.length > 0) {
     await sql_`DELETE FROM sessions WHERE id != ALL(${sessionIds})`;
   } else {
     await sql_`DELETE FROM sessions`;
+  }
+
+  // sync repos
+  for (const repo of db.repos) {
+    await sql_`
+      INSERT INTO repos (id, user_id, owner, name, full_name, created_at)
+      VALUES (${repo.id}, ${repo.userId}, ${repo.owner}, ${repo.name}, ${repo.fullName}, ${repo.createdAt})
+      ON CONFLICT (id) DO NOTHING
+    `;
+  }
+  const repoIds = db.repos.map(r => r.id);
+  if (repoIds.length > 0) {
+    await sql_`DELETE FROM repos WHERE user_id = ANY(${db.users.map(u => u.id)}) AND id != ALL(${repoIds})`;
   }
 
   return result;
