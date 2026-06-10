@@ -270,6 +270,14 @@ export async function updateDb<T>(updater: (db: AppDatabase) => T | Promise<T>):
       ON CONFLICT (id) DO NOTHING
     `;
   }
+  // sync sandbox messages
+  for (const msg of db.sandboxMessages) {
+    await sql_`
+      INSERT INTO sandbox_messages (id, user_id, role, content, steps, timestamp)
+      VALUES (${msg.id}, ${msg.userId}, ${msg.role}, ${msg.content}, ${JSON.stringify(msg.steps ?? [])}, ${msg.timestamp})
+      ON CONFLICT (id) DO UPDATE SET content = ${msg.content}, steps = ${JSON.stringify(msg.steps ?? [])}
+    `;
+  }
   const repoIds = db.repos.map(r => r.id);
   if (repoIds.length > 0) {
     await sql_`DELETE FROM repos WHERE user_id = ANY(${db.users.map(u => u.id)}) AND id != ALL(${repoIds})`;
