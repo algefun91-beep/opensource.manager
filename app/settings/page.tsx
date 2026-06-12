@@ -16,6 +16,8 @@ export default function SettingsPage() {
     setDarkMode(next);
     localStorage.setItem('theme', next ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    console.log('data-theme set to:', document.documentElement.getAttribute('data-theme'));
+    console.log('body bg:', getComputedStyle(document.body).backgroundColor);
   };
 
 
