@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (isPublicPage) {
     return (
       <div className="min-h-screen"
-        style={{ background: 'linear-gradient(160deg,#07111f 0%,#0e1f35 52%,#081421 100%)' }}>
+        style={{ background: 'var(--app-bg)' }}>
         {children}
       </div>
     );
