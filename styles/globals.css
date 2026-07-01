@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Dark mode (default) ─────────────────────────────────────────────────── */
 :root {
   --glass-bg: rgba(10, 20, 50, 0.7);
   --glass-border: rgba(100, 150, 255, 0.15);
@@ -13,22 +14,88 @@
   --text-secondary: rgba(140, 170, 230, 0.65);
   --text-muted: rgba(90, 120, 180, 0.5);
   --app-bg: linear-gradient(160deg, #0a0f1e 0%, #0d1a2e 50%, #091628 100%);
-}
-[data-theme="light"] {
-  --glass-bg: rgba(230, 238, 255, 0.8);
-  --glass-border: rgba(100, 140, 220, 0.25);
-  --accent-blue: #2563eb;
-  --text-primary: rgba(20, 35, 70, 0.92);
-  --text-secondary: rgba(60, 90, 160, 0.7);
-  --text-muted: rgba(100, 130, 190, 0.6);
-  --app-bg: linear-gradient(160deg, #dde8ff 0%, #e8f0ff 50%, #d8e4ff 100%);
+  --sidebar-bg: rgba(8, 16, 40, 0.85);
+  --sidebar-border: rgba(100, 160, 255, 0.13);
+  --card-bg: rgba(12, 24, 58, 0.6);
+  --card-border: rgba(70, 120, 220, 0.15);
+  --topbar-bg: rgba(8, 16, 38, 0.7);
+  --input-bg: rgba(12, 22, 55, 0.8);
+  --input-border: rgba(70, 120, 220, 0.2);
+  --logout-bg: rgba(239, 68, 68, 0.1);
+  --logout-border: rgba(239, 68, 68, 0.25);
+  --logout-text: rgba(252, 165, 165, 0.8);
 }
 
-[data-theme="light"],
+/* ── Light mode ──────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --glass-bg: rgba(220, 232, 255, 0.85);
+  --glass-border: rgba(100, 140, 220, 0.25);
+  --glass-highlight: rgb(255, 255, 255);
+  --accent-blue: #adc6fc;
+  --accent-purple: #7c3aed;
+  --accent-green: #059669;
+  --text-primary: rgba(15, 25, 60, 0.92);
+  --text-secondary: rgba(40, 65, 140, 0.75);
+  --text-muted: rgba(70, 100, 170, 0.6);
+  --app-bg: linear-gradient(160deg, #dde8ff 0%, #e8f0ff 50%, #d8e4ff 100%);
+  --sidebar-bg: rgba(200, 218, 255, 0.92);
+  --sidebar-border: rgba(100, 140, 220, 0.2);
+  --card-bg: rgba(210, 225, 255, 0.7);
+  --card-border: rgba(100, 140, 220, 0.2);
+  --topbar-bg: rgba(200, 218, 255, 0.8);
+  --input-bg: rgba(230, 238, 255, 0.9);
+  --input-border: rgba(100, 140, 220, 0.3);
+  --logout-bg: rgba(180, 30, 30, 0.1);
+  --logout-border: rgba(180, 30, 30, 0.3);
+  --logout-text: rgba(150, 20, 20, 0.9);
+  --rounded-container-bg: rgba(255, 255, 255, 0.85);
+}
+
+/* Light mode global text — overrides inline rgba colors */
 [data-theme="light"] body {
   background: #e8f0ff !important;
-  color: var(--text-primary);
+  color: rgba(15, 25, 60, 0.92) !important;
 }
+
+[data-theme="light"] span,
+[data-theme="light"] p,
+[data-theme="light"] a,
+[data-theme="light"] label,
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3 {
+  color: rgba(15, 25, 60, 0.9) !important;
+}
+
+/* Light mode div text — but NOT terminal/screen panels */
+[data-theme="light"] div:not(.terminal-panel):not(.terminal-panel *):not(.screen-panel):not(.screen-panel *) {
+  color: rgba(15, 25, 60, 0.9);
+}
+
+/* Light mode buttons */
+[data-theme="light"] button {
+  color: rgba(15, 25, 60, 0.85) !important;
+}
+
+/* Keep terminal dark in light mode */
+[data-theme="light"] .terminal-panel {
+  background: #060d1e !important;
+}
+[data-theme="light"] .terminal-panel,
+[data-theme="light"] .terminal-panel * {
+  color: rgba(160, 220, 160, 0.9) !important;
+}
+
+/* Keep screen panel dark in light mode */
+[data-theme="light"] .screen-panel {
+  background: #060d1e !important;
+}
+[data-theme="light"] .screen-panel,
+[data-theme="light"] .screen-panel * {
+  color: rgba(100, 180, 255, 0.85) !important;
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
 
 html, body {
@@ -41,13 +108,13 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar */
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(80, 130, 255, 0.25); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(80, 130, 255, 0.45); }
 
-/* Glass card base */
+/* ── Glass ───────────────────────────────────────────────────────────────── */
 .glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -64,7 +131,7 @@ html, body {
   pointer-events: none;
 }
 
-/* Live pulse dot */
+/* ── Animations ──────────────────────────────────────────────────────────── */
 @keyframes livePulse {
   0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
   50% { opacity: 0.7; transform: scale(0.85); box-shadow: 0 0 0 4px rgba(52, 211, 153, 0); }
@@ -78,11 +145,9 @@ html, body {
   flex-shrink: 0;
 }
 
-/* Blink cursor */
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 .cursor-blink { animation: blink 1s step-end infinite; }
 
-/* Agent typing dots */
 @keyframes dotBounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
   40% { transform: translateY(-4px); opacity: 1; }
@@ -91,14 +156,12 @@ html, body {
 .typing-dot:nth-child(2) { animation-delay: 0.15s; }
 .typing-dot:nth-child(3) { animation-delay: 0.3s; }
 
-/* Fade in */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .fade-in { animation: fadeInUp 0.25s ease forwards; }
 
-/* Progress shimmer */
 @keyframes shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }

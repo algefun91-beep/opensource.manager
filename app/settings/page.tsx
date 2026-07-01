@@ -101,9 +101,9 @@ const handleLogout = async () => {
               <button onClick={handleLogout}
                 className="flex items-center gap-2 text-[12px] px-3 py-1.5 rounded-lg transition-all"
                 style={{
-                  background: 'rgba(239,68,68,0.1)',
-                  border: '1px solid rgba(239,68,68,0.25)',
-                  color: 'rgba(252,165,165,0.8)',
+                  background: 'var(--logout-bg)',
+                  border: '1px solid var(--logout-border)',
+                  color: 'var(--logout-text)',
                   cursor: 'pointer',
                 }}>
                 <LogOut size={13} />

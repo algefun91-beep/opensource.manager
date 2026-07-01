@@ -65,11 +65,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden"
-      style={{ background: 'linear-gradient(160deg,#0a0f1e 0%,#0d1a2e 50%,#091628 100%)' }}>
+      style={{ background: 'var(--app-bg)' }}>
 
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 flex flex-col glass"
-        style={{ borderRight: '1px solid rgba(100,160,255,0.13)', background: 'rgba(8,16,40,0.85)' }}>
+        style={{ borderRight: '1px solid var(--sidebar-border)', background: 'var(--sidebar-bg, rgba(8,16,40,0.85))' }}>
 
         {/* Logo */}
         <div className="px-4 py-4 flex items-center gap-2.5"
