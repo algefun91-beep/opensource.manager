@@ -253,7 +253,7 @@ export default function SandboxPage() {
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Topbar */}
       <div className="flex items-center px-5 gap-3 flex-shrink-0"
-        style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'var(--rounded-container-bg)', backdropFilter: 'blur(8px)' }}>
+        style={{ height: 52, borderBottom: '1px solid var(--border-color)', background: 'var(--rounded-container-bg)', backdropFilter: 'blur(8px)' }}>
         <Bot size={15} style={{ color: 'var(--accent-blue)' }} />
         <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Agent Sandbox</span>
         <div className="flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full"
