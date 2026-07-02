@@ -41,11 +41,11 @@ export default function SignupPage() {
         <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>Start with a local account and connect GitHub repos when you land inside.</p>
         <div className="mt-5 flex flex-col gap-3">
           <input value={name} onChange={event => setName(event.target.value)} placeholder="Name" className="rounded-lg px-3 py-2.5 text-sm outline-none"
-            style={{ background: '--rounded-container-bg', border: '1px solid rgba(70,120,220,0.22)', color: 'var(--text-primary)' }} />
+            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.22)', color: 'var(--text-primary)' }} />
           <input value={email} onChange={event => setEmail(event.target.value)} type="email" placeholder="Email" className="rounded-lg px-3 py-2.5 text-sm outline-none"
-            style={{ background: '--rounded-container-bg', border: '1px solid rgba(70,120,220,0.22)', color: 'var(--text-primary)' }} />
+            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.22)', color: 'var(--text-primary)' }} />
           <input value={password} onChange={event => setPassword(event.target.value)} type="password" placeholder="Password" className="rounded-lg px-3 py-2.5 text-sm outline-none"
-            style={{ background: '--rounded-container-bg', border: '1px solid rgba(70,120,220,0.22)', color: 'var(--text-primary)' }} />
+            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.22)', color: 'var(--text-primary)' }} />
         </div>
         {error && <div className="mt-3 text-xs" style={{ color: 'var(--logout-text)' }}>{error}</div>}
         <button disabled={loading} className="mt-5 w-full rounded-lg py-2.5 text-sm font-medium"

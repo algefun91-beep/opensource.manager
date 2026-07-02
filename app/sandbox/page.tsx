@@ -387,14 +387,14 @@ export default function SandboxPage() {
           {activeTab === 'screen' && (
             <div className="flex-1 flex flex-col overflow-hidden p-2.5 gap-2">
               <div className="rounded-lg overflow-hidden flex-1 flex flex-col"
-                style={{ background: '#060d1e', border: '1px solid rgba(50,90,200,0.25)' }}>
+                style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(50,90,200,0.25)' }}>
                 <div className="flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0"
-                  style={{ background: 'rgba(15,28,65,0.9)', borderBottom: '1px solid rgba(50,90,200,0.2)' }}>
+                  style={{ background: 'var(--header-bg)', borderBottom: '1px solid rgba(50,90,200,0.2)' }}>
                   <div className="w-2 h-2 rounded-full" style={{ background: '#ef4444' }} />
                   <div className="w-2 h-2 rounded-full" style={{ background: '#f59e0b' }} />
                   <div className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} />
                   <div className="flex-1 mx-2 h-4 rounded text-[9px] flex items-center px-2"
-                    style={{ background: 'rgba(25,45,100,0.7)', border: '1px solid rgba(60,100,200,0.2)', color: 'rgba(120,160,220,0.6)', fontFamily: 'monospace' }}>
+                    style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(60,100,200,0.2)', color: 'rgba(120,160,220,0.6)', fontFamily: 'monospace' }}>
                     {loading ? 'agent://working...' : 'agent://ready'}
                   </div>
                 </div>
