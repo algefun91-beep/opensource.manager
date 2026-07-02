@@ -87,11 +87,11 @@ export default function ReleasifyPage() {
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
       <div className="h-13 flex items-center px-5 gap-3 flex-shrink-0"
-        style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'rgba(8,16,38,0.7)', backdropFilter: 'blur(8px)' }}>
-        <GitBranch size={15} style={{ color: '#93c5fd' }} />
-        <span className="text-sm font-medium" style={{ color: 'rgba(200,220,255,0.9)' }}>Releasify</span>
+        style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'var(--rounded-container-bg)', backdropFilter: 'blur(8px)' }}>
+        <GitBranch size={15} style={{ color: 'var(--accent-blue)' }} />
+        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Releasify</span>
         <span className="text-[11px] px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(59,130,246,0.15)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.2)' }}>
+          style={{ background: 'var(--rounded-container-bg)', color: 'var(--accent-blue)', border: '1px solid rgba(59,130,246,0.2)' }}>
           AI changelog generator
         </span>
       </div>

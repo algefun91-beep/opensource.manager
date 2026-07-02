@@ -253,11 +253,11 @@ export default function SandboxPage() {
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Topbar */}
       <div className="flex items-center px-5 gap-3 flex-shrink-0"
-        style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'rgba(8,16,38,0.7)', backdropFilter: 'blur(8px)' }}>
-        <Bot size={15} style={{ color: '#93c5fd' }} />
-        <span className="text-sm font-medium" style={{ color: 'rgba(200,220,255,0.9)' }}>Agent Sandbox</span>
+        style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'var(--rounded-container-bg)', backdropFilter: 'blur(8px)' }}>
+        <Bot size={15} style={{ color: 'var(--accent-blue)' }} />
+        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Agent Sandbox</span>
         <div className="flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(16,185,129,0.1)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.2)' }}>
+          style={{ background: 'var(--rounded-container-bg)', color: 'var(--accent-green)', border: '1px solid rgba(16,185,129,0.2)' }}>
           <div className="live-dot" style={{ width: 6, height: 6 }} />
           {puterReady ? 'AI ready' : 'loading AI…'}
         </div>
@@ -267,11 +267,11 @@ export default function SandboxPage() {
             onChange={e => setAgentKey(e.target.value)}
             placeholder="Agent key (dev)"
             className="text-[12px] px-2 py-1 rounded"
-            style={{ background: 'rgba(8,12,28,0.6)', border: '1px solid rgba(60,90,160,0.12)', color: '#e2e8f0', width: 160 }}
+            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(60,90,160,0.12)', color: 'var(--text-primary)', width: 160 }}
           />
           <button onClick={() => { setAgentKey(''); localStorage.removeItem('agent_key'); }}
             className="text-[12px] px-2 py-1 rounded"
-            style={{ background: 'rgba(40,40,60,0.2)', border: '1px solid rgba(60,90,160,0.12)', color: 'rgba(180,200,255,0.85)' }}>
+            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(60,90,160,0.12)', color: 'var(--text-primary)' }}>
             Clear
           </button>
         </div>
@@ -286,9 +286,9 @@ export default function SandboxPage() {
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full gap-6">
                 <div className="text-center">
-                  <Bot size={40} className="mx-auto mb-3" style={{ color: 'rgba(80,120,200,0.3)' }} />
-                  <div className="text-sm mb-1" style={{ color: 'rgba(160,190,240,0.7)' }}>Agent is ready</div>
-                  <div className="text-[12px]" style={{ color: 'rgba(100,140,200,0.45)' }}>
+                  <Bot size={40} className="mx-auto mb-3" style={{ color: 'var(--accent-blue)' }} />
+                  <div className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>Agent is ready</div>
+                  <div className="text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
                     Give it a task — it can browse the web, run shell commands, read/write files, and send email
                   </div>
                 </div>
@@ -296,7 +296,7 @@ export default function SandboxPage() {
                   {EXAMPLE_PROMPTS.map(p => (
                     <button key={p} onClick={() => setInput(p)}
                       className="text-left text-[12px] px-3 py-2.5 rounded-lg transition-all"
-                      style={{ background: 'rgba(15,28,65,0.5)', border: '1px solid rgba(60,100,200,0.15)', color: 'rgba(140,180,240,0.7)', lineHeight: 1.4 }}>
+                      style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(60,100,200,0.15)', color: 'var(--text-primary)', lineHeight: 1.4 }}>
                       {p}
                     </button>
                   ))}
@@ -310,7 +310,7 @@ export default function SandboxPage() {
                   <div className="flex flex-col gap-1 w-full max-w-md">
                     {msg.steps.map((s, si) => (
                       <div key={si} className="flex items-center gap-2 text-[12px]"
-                        style={{ color: s.type === 'done' ? 'rgba(100,210,140,0.8)' : s.type === 'error' ? 'rgba(255,100,100,0.8)' : 'rgba(150,190,255,0.7)' }}>
+                        style={{ color: s.type === 'done' ? 'var(--accent-green)' : s.type === 'error' ? 'var(--accent-red)' : 'var(--text-secondary)' }}>
                         {s.type === 'done' && <CheckCircle size={13} />}
                         {s.type === 'running' && <Loader size={13} className="animate-spin" />}
                         {s.type === 'error' && <AlertCircle size={13} />}
@@ -322,15 +322,15 @@ export default function SandboxPage() {
                 <div className={clsx('text-[13px] leading-relaxed px-3 py-2 rounded-xl max-w-2xl overflow-hidden',
                   msg.role === 'user' ? 'rounded-br-sm' : 'rounded-bl-sm')}
                   style={msg.role === 'user'
-                    ? { background: 'rgba(37,99,235,0.25)', border: '1px solid rgba(96,165,250,0.2)', color: 'rgba(180,210,255,0.9)' }
-                    : { background: 'rgba(15,30,65,0.7)', border: '1px solid rgba(60,100,200,0.15)', color: 'rgba(160,200,255,0.85)' }}>
+                    ? { background: 'var(--user-message-bg)', border: '1px solid rgba(96,165,250,0.2)', color: 'var(--user-message-text)' }
+                    : { background: 'var(--bot-message-bg)', border: '1px solid rgba(60,100,200,0.15)', color: 'var(--bot-message-text)' }}>
                   {msg.content
                     ? renderMessageWithCodeBlocks(msg.content)
                     : (loading && i === messages.length - 1 && (
                       <div className="flex gap-1 items-center py-0.5">
                         {[0, 1, 2].map(j => (
                           <div key={j} className="w-1.5 h-1.5 rounded-full typing-dot"
-                            style={{ background: 'rgba(130,170,240,0.6)', animationDelay: `${j * 0.15}s` }} />
+                            style={{ background: 'var(--typing-dot-color)', animationDelay: `${j * 0.15}s` }} />
                         ))}
                       </div>
                     ))}
@@ -351,14 +351,14 @@ export default function SandboxPage() {
               disabled={loading}
               placeholder="Give the agent a task…"
               className="flex-1 text-sm px-4 py-2.5 rounded-xl outline-none"
-              style={{ background: 'rgba(12,22,55,0.8)', border: '1px solid rgba(70,120,220,0.2)', color: '#e2e8f0', caretColor: '#93c5fd' }}
+              style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.2)', color: 'var(--text-primary)', caretColor: 'var(--accent-blue)' }}
             />
             <button onClick={sendMessage} disabled={loading || !input.trim()}
               className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
               style={{
-                background: input.trim() && !loading ? 'rgba(37,99,235,0.5)' : 'rgba(37,99,235,0.15)',
+                background: input.trim() && !loading ? 'var(--accent-blue)' : 'var(--rounded-container-bg)',
                 border: '1px solid rgba(96,165,250,0.3)',
-                color: input.trim() && !loading ? '#93c5fd' : 'rgba(96,165,250,0.3)',
+                color: input.trim() && !loading ? '#93c5fd' : 'var(--text-tertiary)',
                 cursor: input.trim() && !loading ? 'pointer' : 'not-allowed',
               }}>
               <ArrowUp size={16} />
