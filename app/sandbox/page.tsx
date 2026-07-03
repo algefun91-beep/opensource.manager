@@ -10,10 +10,10 @@ type Step = { type: 'done' | 'running' | 'error'; text: string };
 type Message = ChatMessage;
 
 const INITIAL_SCREEN_LINES = [
-  { color: 'rgba(80,160,255,0.7)',  text: '$ agent-sandbox v0.1.0 ready' },
+  { color: 'rgb(80, 159, 255)',  text: '$ agent-sandbox v0.1.0 ready' },
   { color: 'rgba(160,210,160,0.8)', text: '→ docker container running' },
-  { color: 'rgba(160,210,160,0.8)', text: '→ 2GB storage mounted at /storage' },
-  { color: 'rgba(160,210,160,0.8)', text: '→ playwright browser ready' },
+  { color: 'rgb(160, 210, 160)', text: '→ 2GB storage mounted at /storage' },
+  { color: 'rgb(160, 210, 160)', text: '→ playwright browser ready' },
   { color: 'rgba(200,200,80,0.8)',  text: '→ awaiting task...' },
 ];
 

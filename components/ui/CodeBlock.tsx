@@ -23,7 +23,7 @@ export default function CodeBlock({ code, language = 'bash' }: { code: string; l
           alignItems: 'center',
           padding: '10px 14px',
           borderRadius: '8px 8px 0 0',
-          background: 'rgba(12,24,48,0.98)',
+          background: 'var(--rounded-container-bg)',
           border: '1px solid rgba(60,90,160,0.35)',
           borderBottom: 'none',
         }}
