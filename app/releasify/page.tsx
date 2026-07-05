@@ -103,7 +103,7 @@ export default function ReleasifyPage() {
             <div className="text-[11px] uppercase tracking-wider mb-2" style={{ color: 'rgba(100,140,200,0.5)' }}>Repository</div>
             <select value={selectedRepo} onChange={event => setSelectedRepo(event.target.value)}
               className="w-full px-3 py-2 rounded-lg text-[13px] outline-none"
-              style={{ background: 'rgba(15,28,65,0.6)', border: '1px solid rgba(70,120,220,0.2)', color: 'rgba(190,215,255,0.85)' }}>
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}>
               <option value="">Connect a repo first</option>
               {repos.map(repo => <option key={repo.fullName} value={repo.fullName}>{repo.fullName}</option>)}
             </select>
@@ -128,7 +128,7 @@ export default function ReleasifyPage() {
             )}
             {commits.map(c => (
               <div key={c.sha} className="px-3 py-2.5 rounded-lg mb-1.5"
-                style={{ background: 'rgba(10,20,50,0.4)', border: '1px solid rgba(60,100,200,0.1)' }}>
+                style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(60,100,200,0.1)' }}>
                 <div className="text-[12px] mb-1" style={{ color: 'rgba(180,210,255,0.8)', lineHeight: 1.4 }}>
                   {c.message}
                 </div>

@@ -253,7 +253,7 @@ export default function SandboxPage() {
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Topbar */}
       <div className="flex items-center px-5 gap-3 flex-shrink-0"
-        style={{ height: 52, borderBottom: '1px solid var(--border-color)', background: 'var(--rounded-container-bg)', backdropFilter: 'blur(8px)' }}>
+        style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'var(--rounded-container-bg)', backdropFilter: 'blur(8px)' }}>
         <Bot size={15} style={{ color: 'var(--accent-blue)' }} />
         <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Agent Sandbox</span>
         <div className="flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full"
@@ -267,11 +267,11 @@ export default function SandboxPage() {
             onChange={e => setAgentKey(e.target.value)}
             placeholder="Agent key (dev)"
             className="text-[12px] px-2 py-1 rounded"
-            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(60,90,160,0.12)', color: 'var(--text-primary)', width: 160 }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', width: 160 }}
           />
           <button onClick={() => { setAgentKey(''); localStorage.removeItem('agent_key'); }}
             className="text-[12px] px-2 py-1 rounded"
-            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(60,90,160,0.12)', color: 'var(--text-primary)' }}>
+            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(96,165,250,0.35)', color: 'var(--accent-blue)' }}>
             Clear
           </button>
         </div>
@@ -368,7 +368,7 @@ export default function SandboxPage() {
 
         {/* Right panel */}
         <div className="w-80 flex-shrink-0 flex flex-col min-h-0 overflow-hidden"
-          style={{ borderLeft: '1px solid rgba(100,160,255,0.1)', background: 'rgba(6,12,32,0.7)' }}>
+          style={{ borderLeft: '1px solid rgba(100,160,255,0.1)', background: 'var(--rounded-container-bg)' }}>
 
           {/* Tabs */}
           <div className="flex px-3 flex-shrink-0" style={{ borderBottom: '1px solid rgba(100,160,255,0.1)' }}>

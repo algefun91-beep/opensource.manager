@@ -133,8 +133,8 @@ export default function DashboardPage() {
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Topbar */}
       <div className="h-13 flex items-center px-5 gap-3 flex-shrink-0"
-        style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'rgba(8,16,38,0.7)', backdropFilter: 'blur(8px)' }}>
-        <span className="text-sm font-medium" style={{ color: 'rgba(200,220,255,0.9)' }}>Project Dashboard</span>
+        style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'var(--rounded-container-bg)', backdropFilter: 'blur(8px)' }}>
+        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Project Dashboard</span>
         <span className="text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1"
           style={{ background: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.25)' }}>
           ✓ {repos.length} repos connected
@@ -163,7 +163,7 @@ export default function DashboardPage() {
         )}
 
         {/* Stat row */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: AlertCircle, value: totals.issues, label: 'open issues',   color: '#93c5fd' },
             { icon: GitPullRequest, value: totals.prs,  label: 'open PRs',   color: '#a78bfa' },
@@ -171,7 +171,7 @@ export default function DashboardPage() {
             { icon: Users,       value: totals.contributors,  label: 'contributors', color: '#6ee7b7' },
           ].map(({ icon: Icon, value, label, color }) => (
             <div key={label} className="rounded-xl p-4 text-center"
-              style={{ background: 'rgba(15,28,65,0.6)', border: '1px solid rgba(70,120,220,0.15)' }}>
+              style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.15)' }}>
               <Icon size={16} className="mx-auto mb-2" style={{ color }} />
               <div className="text-2xl font-medium" style={{ color }}>{value.toLocaleString()}</div>
               <div className="text-[11px] mt-0.5" style={{ color: 'rgba(100,140,200,0.55)' }}>{label}</div>
@@ -181,7 +181,7 @@ export default function DashboardPage() {
 
         {/* Repos */}
         <div className="rounded-xl p-4 relative overflow-hidden glass-shine"
-          style={{ background: 'rgba(12,24,58,0.6)', border: '1px solid rgba(70,120,220,0.15)', position: 'relative' }}>
+          style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.15)', position: 'relative' }}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider" style={{ color: 'rgba(130,170,240,0.7)' }}>
               <GitBranch size={13} /> Repositories
@@ -191,7 +191,7 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-2">
             {reposData.length === 0 && (
               <div className="px-3 py-5 rounded-lg text-center"
-                style={{ background: 'rgba(15,28,65,0.45)', border: '1px solid rgba(70,120,220,0.12)' }}>
+                style={{ background: 'var(--input-bg)', border: '1px solid rgba(70,120,220,0.12)' }}>
                 <div className="text-sm" style={{ color: 'rgba(200,220,255,0.82)' }}>No live repo data yet</div>
                 <div className="text-[12px] mt-1" style={{ color: 'rgba(100,140,200,0.58)' }}>
                   Use Connect repo in the sidebar, then the dashboard will sync from GitHub.
@@ -203,7 +203,7 @@ export default function DashboardPage() {
               const color = LANGUAGE_COLORS[r.language] || '#8b5cf6';
               return (
                 <a key={r.fullName} href={r.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all"
-                  style={{ background: 'rgba(15,28,65,0.5)', border: '1px solid rgba(70,120,220,0.12)' }}>
+                  style={{ background: 'var(--input-bg)', border: '1px solid rgba(70,120,220,0.12)' }}>
                   <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm" style={{ color: 'rgba(200,220,255,0.85)' }}>{r.fullName}</div>
@@ -223,20 +223,20 @@ export default function DashboardPage() {
 
         {/* Recent issues */}
         <div className="rounded-xl p-4"
-          style={{ background: 'rgba(12,24,58,0.6)', border: '1px solid rgba(70,120,220,0.15)' }}>
+          style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.15)' }}>
           <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider mb-3" style={{ color: 'rgba(130,170,240,0.7)' }}>
             <AlertCircle size={13} /> Recent issues
           </div>
           <div className="flex flex-col gap-2">
             {recentIssues.length === 0 && (
               <div className="px-3 py-4 rounded-lg text-[12px] text-center"
-                style={{ background: 'rgba(10,20,50,0.4)', border: '1px solid rgba(60,100,200,0.1)', color: 'rgba(100,140,200,0.58)' }}>
+                style={{ background: 'var(--input-bg)', border: '1px solid rgba(60,100,200,0.1)', color: 'rgba(100,140,200,0.58)' }}>
                 No open issues found for connected repos.
               </div>
             )}
             {recentIssues.map((issue, i) => (
               <a key={`${issue.repo}-${issue.title}-${i}`} href={issue.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer"
-                style={{ background: 'rgba(10,20,50,0.4)', border: '1px solid rgba(60,100,200,0.1)' }}>
+                style={{ background: 'var(--input-bg)', border: '1px solid rgba(60,100,200,0.1)' }}>
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] truncate" style={{ color: 'rgba(190,215,255,0.85)' }}>{issue.title}</div>
                   <div className="text-[11px] mt-0.5" style={{ color: 'rgba(100,140,200,0.5)' }}>{issue.repo}</div>
@@ -255,7 +255,7 @@ export default function DashboardPage() {
 
         {/* Releasify draft card */}
         <div className="rounded-xl p-4"
-          style={{ background: 'rgba(12,24,58,0.6)', border: '1px solid rgba(70,120,220,0.15)' }}>
+          style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.15)' }}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider" style={{ color: 'rgba(130,170,240,0.7)' }}>
               <Clock size={13} /> Releasify — next changelog

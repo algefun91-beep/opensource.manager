@@ -69,13 +69,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 flex flex-col glass"
-        style={{ borderRight: '1px solid var(--sidebar-border)', background: 'var(--sidebar-bg, rgba(8,16,40,0.85))' }}>
+        style={{ borderRight: '1px solid var(--sidebar-border)', background: 'var(--rounded-container-bg)' }}>
 
         {/* Logo */}
         <div className="px-4 py-4 flex items-center gap-2.5"
           style={{ borderBottom: '1px solid rgba(100,160,255,0.1)' }}>
           <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg,#2563eb,#7c3aed)' }}>
+            style={{ background: 'linear-gradient(135deg,#2563eb,#14b8a6)' }}>
             <Cpu size={14} className="text-white" />
           </div>
           <div>
@@ -156,9 +156,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 placeholder="owner/repo"
                 className="text-[12px] px-2 py-1.5 rounded-md outline-none"
                 style={{
-                  background: 'rgba(6,12,28,0.7)',
-                  border: '1px solid rgba(70,120,220,0.2)',
-                  color: 'rgba(200,220,255,0.9)',
+                  background: 'var(--input-bg)',
+                  border: '1px solid var(--input-border)',
+                  color: 'var(--text-primary)',
                 }}
               />
               {repoError && (
@@ -204,7 +204,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mt-auto px-2.5 py-3" style={{ borderTop: '1px solid rgba(100,160,255,0.1)' }}>
           <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer">
             <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', color: '#fff' }}>
+              style={{ background: 'linear-gradient(135deg,#2563eb,#14b8a6)', color: '#fff' }}>
               {(user?.name || user?.email || 'U').slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">

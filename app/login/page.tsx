@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
-import { LogIn } from 'lucide-react';
+import { Bot, GitBranch, LayoutDashboard, LogIn, Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,27 +33,91 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-5">
-      <form onSubmit={submit} className="w-full max-w-sm rounded-xl p-6"
-        style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(90,140,220,0.18)' }}>
-        <LogIn size={20} style={{ color: 'var(--accent-blue)' }} />
-        <h1 className="mt-4 text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>Log in</h1>
-        <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>Return to your connected repos, release drafts, and sandbox chat.</p>
-        <div className="mt-5 flex flex-col gap-3">
-          <input value={email} onChange={event => setEmail(event.target.value)} type="email" placeholder="Email" className="rounded-lg px-3 py-2.5 text-sm outline-none"
-            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.22)', color: 'var(--text-primary)' }} />
-          <input value={password} onChange={event => setPassword(event.target.value)} type="password" placeholder="Password" className="rounded-lg px-3 py-2.5 text-sm outline-none"
-            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.22)', color: 'var(--text-primary)' }} />
+    <main className="min-h-screen overflow-hidden">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg"
+            style={{ background: 'linear-gradient(135deg,#2563eb,#14b8a6)' }}>
+            <Sparkles size={15} className="text-white" />
+          </div>
+          <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>opensource.manager</span>
+        </Link>
+        <Link href="/signup" className="rounded-md px-3 py-1.5 text-sm"
+          style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(96,165,250,0.35)', color: 'var(--accent-blue)' }}>
+          Sign up
+        </Link>
+      </nav>
+
+      <section className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-5 pb-10 pt-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8 lg:pt-12">
+        <form onSubmit={submit} className="glass-shine relative w-full rounded-xl p-5 sm:p-6"
+          style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.15)' }}>
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider"
+            style={{ color: 'rgba(130,170,240,0.7)' }}>
+            <LogIn size={14} /> Account access
+          </div>
+          <h1 className="mt-4 text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>Log in</h1>
+          <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+            Return to your connected repos, release drafts, and sandbox chat.
+          </p>
+
+          <div className="mt-6 flex flex-col gap-3">
+            <label className="flex flex-col gap-1.5 text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              Email
+              <input
+                value={email}
+                onChange={event => setEmail(event.target.value)}
+                type="email"
+                autoComplete="email"
+                className="rounded-lg px-3 py-2.5 text-sm normal-case outline-none"
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', letterSpacing: 0 }}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5 text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              Password
+              <input
+                value={password}
+                onChange={event => setPassword(event.target.value)}
+                type="password"
+                autoComplete="current-password"
+                className="rounded-lg px-3 py-2.5 text-sm normal-case outline-none"
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', letterSpacing: 0 }}
+              />
+            </label>
+          </div>
+
+          {error && (
+            <div className="mt-3 rounded-lg px-3 py-2 text-xs"
+              style={{ background: 'var(--logout-bg)', border: '1px solid var(--logout-border)', color: 'var(--logout-text)' }}>
+              {error}
+            </div>
+          )}
+
+          <button disabled={loading} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all"
+            style={{ background: 'rgba(37,99,235,0.35)', border: '1px solid rgba(96,165,250,0.35)', color: '#93c5fd', cursor: loading ? 'not-allowed' : 'pointer' }}>
+            <LogIn size={14} />
+            {loading ? 'Signing in...' : 'Log in'}
+          </button>
+
+          <div className="mt-4 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+            New here? <Link href="/signup" style={{ color: 'var(--accent-blue)' }}>Create an account</Link>
+          </div>
+        </form>
+
+        <div className="grid content-center gap-3">
+          {[
+            { icon: LayoutDashboard, title: 'Live dashboard', text: 'Pick up where your repository health and activity left off.' },
+            { icon: GitBranch, title: 'Release drafts', text: 'Review generated changelogs from live commit history.' },
+            { icon: Bot, title: 'Agent sandbox', text: 'Keep assistant context close to your project workflow.' },
+          ].map(({ icon: Icon, title, text }) => (
+            <div key={title} className="rounded-xl p-5"
+              style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(90,140,220,0.16)' }}>
+              <Icon size={18} style={{ color: 'var(--accent-blue)' }} />
+              <div className="mt-3 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{title}</div>
+              <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{text}</p>
+            </div>
+          ))}
         </div>
-        {error && <div className="mt-3 text-xs" style={{ color: 'var(--logout-text)' }}>{error}</div>}
-        <button disabled={loading} className="mt-5 w-full rounded-lg py-2.5 text-sm font-medium"
-          style={{ background: 'var(--accent-blue)', border: '1px solid rgba(96,165,250,0.4)', color: '#dbeafe' }}>
-          {loading ? 'Signing in...' : 'Log in'}
-        </button>
-        <div className="mt-4 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
-          New here? <Link href="/signup" style={{ color: 'var(--accent-blue)' }}>Create an account</Link>
-        </div>
-      </form>
+      </section>
     </main>
   );
 }

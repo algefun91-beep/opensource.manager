@@ -34,9 +34,9 @@ const handleLogout = async () => {
     <div className="flex flex-col h-full overflow-hidden">
       {/* Topbar */}
       <div className="flex items-center px-5 gap-3 flex-shrink-0"
-        style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'rgba(8,16,38,0.7)', backdropFilter: 'blur(8px)' }}>
+        style={{ height: 52, borderBottom: '1px solid rgba(100,160,255,0.1)', background: 'var(--rounded-container-bg)', backdropFilter: 'blur(8px)' }}>
         <Settings size={15} style={{ color: '#93c5fd' }} />
-        <span className="text-sm font-medium" style={{ color: 'rgba(200,220,255,0.9)' }}>Settings</span>
+        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Settings</span>
       </div>
 
       {/* Content */}
@@ -45,7 +45,7 @@ const handleLogout = async () => {
 
           {/* Appearance */}
           <div className="rounded-xl p-4"
-            style={{ background: 'rgba(12,24,58,0.6)', border: '1px solid rgba(70,120,220,0.15)' }}>
+            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.15)' }}>
             <div className="text-[11px] uppercase tracking-wider mb-3"
               style={{ color: 'rgba(100,140,200,0.5)' }}>Appearance</div>
 
@@ -82,14 +82,14 @@ const handleLogout = async () => {
 
           {/* Account */}
           <div className="rounded-xl p-4"
-            style={{ background: 'rgba(12,24,58,0.6)', border: '1px solid rgba(70,120,220,0.15)' }}>
+            style={{ background: 'var(--rounded-container-bg)', border: '1px solid rgba(70,120,220,0.15)' }}>
             <div className="text-[11px] uppercase tracking-wider mb-3"
               style={{ color: 'rgba(100,140,200,0.5)' }}>Account</div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-medium"
-                  style={{ background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', color: '#fff' }}>
+                  style={{ background: 'linear-gradient(135deg,#2563eb,#14b8a6)', color: '#fff' }}>
                   JD
                 </div>
                 <div>
